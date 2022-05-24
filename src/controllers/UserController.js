@@ -24,8 +24,7 @@ const { isValidObjectId } = require("mongoose")
         //MOBILE NUMBER VALIDATION must be number start with 6,7,8,9 and of 10 digit 
         const validateNumber = (number) => {
             return String(number).trim().match(
-                ///^(\+\d{1,3}[- ]?)?\d{10}$/
-                /^[6-9]\d{9}$/gi
+                 /^[6-9]\d{9}$/gi
             )
         }
         
@@ -87,7 +86,7 @@ const register = async (req, res) => {
             return res.status(400).send({ status: false, message: "please enter some DETAILS!!!" })
         }
 
-        //fname is mandatory and must be in [Mr , Mrs , Miss]------------------------------------------------
+        //fname is mandatory  ------------------------------------------------
         if (!data.fname) {
             return res.status(400).send({ status: false, message: "firest name is required!!!" })
         }
