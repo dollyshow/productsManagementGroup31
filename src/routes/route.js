@@ -8,7 +8,7 @@ const UserController = require("../controllers/UserController")
 router.post("/register", UserController.register)
 router.post('/Login', UserController.userLogin)
 router.get('/user/:userId/profile', UserController.getProfile)
-router.put('user/:userId/profile', UserController.updateUserDetails)
+router.put('/user/:userId/profile', UserController.updateUserDetails)
 
 //if api is invalid OR wrong URL
 router.all("/**", function (req, res) {

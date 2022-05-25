@@ -1,82 +1,11 @@
-const UserModel = require('../models/userModel')
-const bcrypt = require('bcrypt')
-const jwt=require('jsonwebtoken')
-const aws = require('aws-sdk')
-const { isValidObjectId } = require("mongoose")
+const userModel = require('../models/userModel')
+ const bcrypt = require('bcrypt')
+ const jwt=require('jsonwebtoken')
+const  {uploadFile} =require("../utils/aws")
+const mongoose= require("mongoose")
+const  { isValid, isValidObjectType, isValidBody,  validString, validMobileNum, validEmail, validPwd, isValidObjectId } = require("../utils/validations")
+
 //--------------------------------------------------------------------------------------------------------------------------------------
-
-        //name validation name can only contain [a-z],[A-Z]and space
-        const validateName = (name) => {
-            return String(name).trim().match(
-                /^[a-zA-Z][a-zA-Z\s]+$/);
-        };
-
-        //email validation function
-        const validateEmail = (email) => {
-            return String(email).trim()
-                .toLowerCase()
-                .match(
-                    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-                );
-        };
-
-   
-        //MOBILE NUMBER VALIDATION must be number start with 6,7,8,9 and of 10 digit 
-        const validateNumber = (number) => {
-            return String(number).trim().match(
-                 /^[6-9]\d{9}$/gi
-            )
-        }
-        
-const isValid = function (value) {
-    if (typeof value === "undefined" || value === null) return false
-    if (typeof value === 'string' && value.trim().length === 0) return false
-    return true;
-}
-
-// const isValidRequestBody = function (requestBody) {
-//     return Object.keys(requestBody).length > 0
-// }
-//--------------------------------------------------------------------------------------------------------------------------------------
-
-aws.config.update({
-    accessKeyId: "AKIAY3L35MCRVFM24Q7U",
-    secretAccessKey: "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",
-    region: "ap-south-1"
-})
-
-let uploadFile = async (file) => {
-    return new Promise(function (resolve, reject) {
-        // this function will upload file to aws and return the link
-        let s3 = new aws.S3({ apiVersion: '2006-03-01' }); // we will be using the s3 service of aws
-
-        var uploadParams = {
-            ACL: "public-read",
-            Bucket: "classroom-training-bucket",  //HERE
-            Key: "Dolly/" + file.originalname, //HERE 
-            Body: file.buffer
-        }
-
-
-        s3.upload(uploadParams, function (err, data) {
-            if (err) {
-                return reject({ "error": err })
-            }
-           
-      return resolve(data.Location)
-        })
-        
-
-        // let data= await s3.upload( uploadParams)
-        // if( data) return data.Location
-        // else return "there is an error"
-
-    })
-}
-
-
-
-
 const register = async (req, res) => {
     try {
         const data = req.body
@@ -90,7 +19,7 @@ const register = async (req, res) => {
         if (!data.fname) {
             return res.status(400).send({ status: false, message: "firest name is required!!!" })
         }
-        if (!validateName(data.fname)) {
+        if (validString(data.fname)) {
             return res.status(400).send({ status: false, message: "first name is INVALID!!!" })
         }
 
@@ -98,7 +27,7 @@ const register = async (req, res) => {
         if (!data.lname) {
             return res.status(400).send({ status: false, message: "last NAME is required!!!" })
         }
-        if (!validateName(data.lname)) {
+        if (validString(data.lname)) {
             return res.status(400).send({ status: false, message: "last NAME is INVALID!!!" })
         }
 
@@ -107,11 +36,11 @@ const register = async (req, res) => {
         if (!data.phone) {
             return res.status(400).send({ status: false, message: "User phone number is missing" })
         }
-        if (!validateNumber(data.phone)) {
+        if (validMobileNum(data.phone)) {
             return res.status(400).send({ status: false, message: "User phone number is INVALID" })
         }
         //check for unique phone number
-        const phone = await UserModel.findOne({ phone: data.phone })
+        const phone = await userModel.findOne({ phone: data.phone })
         if (phone) {
             return res.status(400).send({ status: false, message: "User phone number already exists" })
 
@@ -121,11 +50,11 @@ const register = async (req, res) => {
         if (!data.email)
             return res.status(400).send({ status: false, message: "email is missing" })
 
-        if (!validateEmail(data.email)) {
+        if (validEmail(data.email)) {
             return res.status(400).send({ status: false, message: "Invaild E-mail id " })//email validation
         }
         //check for unique email
-        const email = await UserModel.findOne({ email: data.email })
+        const email = await userModel.findOne({ email: data.email })
         if (email) {
             return res.status(400).send({ status: false, message: "email already exist" })
         }
@@ -232,7 +161,7 @@ const register = async (req, res) => {
 
         data.address = address
         // //create user--------------------------------------------------------------------------------------------------
-        const user = await UserModel.create(data)
+        const user = await userModel.create(data)
         return res.status(201).send({ status: true, message: "success", data: user })
 
     }
@@ -273,7 +202,7 @@ const userLogin = async function(req,res){
        }
        //validation ends
 
-       const match = await UserModel.findOne({email});
+       const match = await userModel.findOne({email});
 
        if(!match){
            res.status(400).send({status:false, message:`Invalid login email`});
@@ -294,7 +223,7 @@ const userLogin = async function(req,res){
        "My private key"
        );
 
-       res.header('x-api-key',token);
+        res.header('x-api-key',token);
         res.status(200).send({status:true, message:`User login successfully`, data:{userId:match._id,token:token}});
 
    } catch (error) {
@@ -306,21 +235,13 @@ const userLogin = async function(req,res){
 const getProfile = async function (req, res) {
     try {
 
-        let data = req.params
+        let userId = req.params.userId
 
-        if(data.userId){
-
-        if (!mongoose.isValidObjectId(data.userId)) return res.status(400).send({ status: false, message: `Invalid userId.` })
+        if (!mongoose.isValidObjectId(userId)) return res.status(400).send({ status: false, message: `Invalid userId.` })
         
-        let checkUser = await UserModel.findById(data.userId)
-
-        if (!checkUser) return res.status(400).send({ status: false, message: "UserId Not Found" })
-        }
-        data.isDeleted = false
-
-        const ProfileList = await UserModel.find(data)
+        const ProfileList = await userModel.findOne({_id:userId})
         
-        if (!Object.keys(ProfileList).length) return res.status(404).send({ status: false, message: "Profile Not Found" })
+        if (!ProfileList) return res.status(404).send({ status: false, message: "Profile Not Found" })
         
         res.status(200).send({ status: true, message: "Profile List", data: ProfileList })
 
@@ -349,11 +270,11 @@ const updateUserDetails = async function (req, res) {
         }
         if (fname) {
             if (!isValid(fname)) return res.status(400).send({ status: false, msg: "fname is not valid" })
-            if (!validString(fname)) return res.status(400).send({ status: false, msg: "fname should not contain number" })
+            if (validString(fname)) return res.status(400).send({ status: false, msg: "fname should not contain number" })
         }
         if (lname) {
             if (!isValid(lname)) return res.status(400).send({ status: false, msg: "lname is not valid" })
-            if (!validString(lname)) return res.status(400).send({ status: false, msg: "lname should not contain number" })
+            if (validString(lname)) return res.status(400).send({ status: false, msg: "lname should not contain number" })
         }
         if (email) {
             if (!validEmail(email)) return res.status(400).send({ status: false, msg: "email is not valid" })
