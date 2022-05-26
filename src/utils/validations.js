@@ -39,7 +39,28 @@ const validMobileNum = (Mobile) => {     ///6876dgdfgd348756  true
     return true;
   };
 };
+const validPriceNum=(price)=>{
+  if(/^\d{0,8}[.]?\d{1,4}$/.test(price)){
+    return false
+  }else{
+    return true;
+  }
+}
+const validInstallments=(installments)=>{
+  if(/^\d{0,1}$/.test(installments)){
+    return false
+  }else{
+    return true;
+  }
+}
+const validCurrencyFormat=(currencyFormat)=>{
+  if(/^\d|₹|$/.test(currencyFormat)){
+    return false
+  }else{
+    return true
+  }
 
+}
 const validEmail = (Email) => {
   if (/^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/.test(Email)) {
     return false
@@ -62,4 +83,5 @@ const isValidObjectId = (objectId) => {
 };
 
 
-module.exports = { isValid, isValidObjectType, isValidBody,  validString, validMobileNum, validEmail, validPwd, isValidObjectId };
+module.exports = { isValid, isValidObjectType, isValidBody,  validString, validMobileNum,validPriceNum,validInstallments,validCurrencyFormat, validEmail, validPwd, isValidObjectId };
+
