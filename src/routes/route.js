@@ -15,6 +15,7 @@ router.put('/user/:userId/profile', UserController.updateUserDetails)
 //product url api
 router.post('/products', productController.Productregister)
 router.get('/products/:productId', productController.getProductById)
+router.put('/products/:productId', productController.updateProductDetals)
 router.delete('/products/:productId', productController.deleteProductById)
 
 //if api is invalid OR wrong URL

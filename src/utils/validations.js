@@ -1,5 +1,11 @@
 const mongoose = require("mongoose")
 
+const isValidSize = (Size) => {
+  let correctSize = ["S", "XS", "M", "X", "L", "XXL", "XL"]
+  return (correctSize.includes(Size))
+}
+
+
 const isValid = function (value) {
   if (typeof value === 'undefined' || value === null) return false
   if (typeof value === 'string' && value.trim().length === 0) return false
@@ -83,5 +89,5 @@ const isValidObjectId = (objectId) => {
 };
 
 
-module.exports = { isValid, isValidObjectType, isValidBody,  validString, validMobileNum,validPriceNum,validInstallments,validCurrencyFormat, validEmail, validPwd, isValidObjectId };
+module.exports = { isValid, isValidObjectType, isValidBody,  validString, validMobileNum,validPriceNum,validInstallments,validCurrencyFormat, validEmail, validPwd, isValidObjectId ,isValidSize};
 
