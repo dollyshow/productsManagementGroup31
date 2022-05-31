@@ -76,6 +76,14 @@ const validEmail = (Email) => {
 
 };
 
+const isValidNum = (number) => {
+  if (/^\d+$/.test(number)) {
+    return true
+  } else {
+    return false;
+  };
+};
+
 const validPwd = (Password) => {
   if (/^(?=.?[A-Z])(?=.?[a-z])(?=.?[0-9])(?=.?[#?!@$%^&*-]).{8,15}$/.test(Password)) {
     return false
@@ -89,5 +97,5 @@ const isValidObjectId = (objectId) => {
 };
 
 
-module.exports = { isValid, isValidObjectType, isValidBody,  validString, validMobileNum,validPriceNum,validInstallments,validCurrencyFormat, validEmail, validPwd, isValidObjectId ,isValidSize};
+module.exports = { isValid,isValidNum, isValidObjectType, isValidBody,  validString, validMobileNum,validPriceNum,validInstallments,validCurrencyFormat, validEmail, validPwd, isValidObjectId ,isValidSize};
 

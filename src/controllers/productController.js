@@ -3,100 +3,102 @@ const { uploadFile } = require("../utils/aws")
 
 
 
-const { isValid, isValidObjectType, isValidBody, validString, validMobileNum, validInstallments, validPriceNum, validCurrencyFormat, validEmail, validPwd, isValidObjectId ,isValidSize} = require("../utils/validations")
+const { isValid,isValidNum , isValidObjectType, isValidBody, validString, validMobileNum, validInstallments, validPriceNum, validCurrencyFormat, validEmail, validPwd, isValidObjectId ,isValidSize} = require("../utils/validations")
 
 
 //################################################################################################################################################################
 const Productregister = async (req, res) => {
     try {
-        const data = req.body
-
-        //check for empty body
-        if (Object.keys(data).length == 0) {
-            return res.status(400).send({ status: false, message: "please enter some DETAILS!!!" })
-        }
-
-        //check for title  ------------------------------------------------
-        if (!data.title) {
-            return res.status(400).send({ status: false, message: "title is required!!!" })
-        }
-        if (validString(data.title)) {
-            return res.status(400).send({ status: false, message: "title is INVALID!!!" })
-        }
-
-        //check for description---------------------------------------------------------------------------------
-        if (!data.description) {
-            return res.status(400).send({ status: false, message: "description is required!!!" })
-        }
-        if (validString(data.description)) {
-            return res.status(400).send({ status: false, message: "description  is INVALID!!!" })
-        }
-
-        //price no---------------------------------------------------------------------------------------------
-
-        if (!data.price) {
-            return res.status(400).send({ status: false, message: "price is missing" })
-        }
-        if (validPriceNum(data.price)) {
-            return res.status(400).send({ status: false, message: "price is INVALID" })
-        }
-
-        //currencyId--------------------------------------------------------------------------------------------------
-        if (!data.currencyId) {
-            return res.status(400).send({ status: false, message: "currencyId is missing" })
-        }
-
-        //currencyFormat----------------------------------------------------------------------------------------------
-        if (!data.currencyFormat) {
-            return res.status(400).send({ status: false, message: "currencyFormat is missing" })
-        }
-        if (validCurrencyFormat(data.currencyFormat)) {
-            return res.status(400).send({ status: false, message: "currencyFormat should show the indian ruppee symbol" })
-        }
-        //productImage---------------------------------------------------------------------------------------------------
+        let requestBody = req.body
         let files = req.files
-        if (files && files.length > 0) {
-            //upload to s3 and get the uploaded link
-            console.log("hello")
-            // res.send the link back to frontend/postman
-            let uploadedFileURL = await uploadFile(files[0])
-            data.productImage = uploadedFileURL
+        let { title, description, price, currencyId, style, availableSizes, installments } = requestBody
 
-        } else {
-            return res.status(400).send({ message: "product cover image not given" })
-        }
-        //style----------------------------------------------------------------------------------------------------------
-        if (!data.style) {
-            return res.status(400).send({ status: false, message: "style is missing" })
-        }
-        if (validString(data.style)) {
-            return res.status(400).send({ status: false, message: "style is INVALID!!!" })
-        }
-        //availableSizes--------------------------------------------------------------------------------------------------
-        if (!data.availableSizes) {
-            return res.status(400).send({ status: false, message: "availableSizes is missing" })
-        }
-        if (["S", "XS", "M", "X", "L", "XXL", "XL"].indexOf(data.availableSizes) == -1) {
-            return res.status(400).send({ status: false, message: "Enter a valid availableSizes (e.g- S or XS or M or X or L or XXL or XL) " });
-        }
+        if (!title) return res.status(400).send({ status: false, message: "title is mandatory" })
+        if (!isValid(title)) return res.status(400).send({ status: false, message: "title Should be Valid" })
+        if (await productModel.findOne({ title })) return res.status(400).send({ status: false, message: "title Should be Unique" })
 
-        //installments
-        if (!data.installments) {
-            return res.status(400).send({ status: false, message: "installments is missing" })
+        if (!description) return res.status(400).send({ status: false, message: "description is mandatory" })
+        if (!isValid(description)) return res.status(400).send({ status: false, message: "title Should be Valid" })
+
+        if (!price) return res.status(400).send({ status: false, message: "price is mandatory" })
+        if (validPriceNum(price)) return res.status(400).send({ status: false, message: "price Should be Valid" })
+
+        if (!currencyId) return res.status(400).send({ status: false, message: "currencyId is mandatory" })
+        if (currencyId.toUpperCase() != "INR") return res.status(400).send({ status: false, message: "currencyId Should be Valid" })
+        requestBody.currencyId = currencyId.toUpperCase()
+        requestBody.currencyFormat = "₹"
+
+        if (!style) return res.status(400).send({ status: false, message: "style is mandatory" })
+        if (!isValid(style)) return res.status(400).send({ status: false, message: "style Should be Valid" })
+        if (validString(style)) return res.status(400).send({ status: false, message: "style Should Not Contain Numbers" })
+
+        if (!availableSizes) return res.status(400).send({ status: false, message: "availableSizes is mandatory" })
+        availableSizes = availableSizes.split(",").map(x => x.trim())
+        if (availableSizes.map(x => isValidSize(x)).filter(x => x === false).length !== 0) return res.status(400).send({ status: false, message: "Size Should be Among  S,XS,M,X,L,XXL,XL" })
+        requestBody.availableSizes = availableSizes
+
+        if (!installments) return res.status(400).send({ status: false, message: "installments is mandatory" })
+        if (!isValidNum(installments)) return res.status(400).send({ status: false, message: "installments Should be whole Number Only" })
+
+        if (!(files && files.length > 0)) return res.status(400).send({ status: false, message: "profile image is mandatory" })
+        let imageUrl = await uploadFile(files[0])
+        requestBody.productImage = imageUrl
+
+        let productCreated = await productModel.create(requestBody)
+        return res.status(201).send({ status: true, message: "User created successfully", data: productCreated })
+    }
+    catch (err) {
+        return res.status(500).send({ status: false, error: err.message })
+    }
+}
+
+//#####################################################################################################################
+
+const getByfilter = async (req,res)=>{
+    try{
+          let data = req.query
+          
+          let filter ={}
+
+          if(data.priceSort){
+          if(!["1","-1"].includes(data.priceSort)){
+              return res.status(400).send({status:false,message:"pricesort must be 1 or -1"})
+          }
+        }else{
+            data.priceSort=1
         }
-        if (validInstallments(data.installments)) {
-            return res.status(400).send({ status: false, message: "installments is Invalid!!!" })
-        }
+          if(data.size){
+              let arr = ["S", "XS","M","X", "L","XXL", "XL"]
+              if(!arr.includes(data.size))   return res.status(400).send({ status: false, message: 'must be in  ["S", "XS","M","X", "L","XXL", "XL"]'})
 
-        // //create product--------------------------------------------------------------------------------------------------
-        const product = await productModel.create(data)
-        return res.status(201).send({ status: true, message: "success", data: product })
+              filter.availableSizes=data.size
+          }
+          if(data.name){
+              //validation is not done here
+              filter.title={$regex: new RegExp(data.name)}
+          }
 
+          if(data.priceGreaterThan)     filter.price = {$gt: data.priceGreaterThan}
 
+          if(data.priceLessThan)     filter.price = {$lt: data.priceLessThan}
+
+          if(data.priceGreaterThan && data.priceLessThan)     filter.price = {$gt: data.priceGreaterThan,$lt: data.priceLessThan}
+
+           
+          filter.isDeleted=false
+          //console.log(filter)
+
+          if(Object.keys(filter).length==0){
+            const product = await productModel.find({isDeleted:false}).sort({price:data.priceSort})
+            return res.status(200).send({ status: true, message: "product list",data:product })
+
+          }
+          const product = await productModel.find(filter).sort({price:data.priceSort})
+          return res.status(200).send({ status: true, message: "product list",data:product })
 
     }
-    catch (error) {
-        res.status(500).send({ status: false, message: error.message });
+    catch(err){
+        res.status(500).send({status:false,message:err.message})
     }
 }
 
@@ -192,4 +194,4 @@ const deleteProductById = async function (req, res) {
 
 //################################################################################################################################################################
 
-module.exports = { Productregister, getProductById, deleteProductById, updateProductDetals }
+module.exports = { Productregister,getByfilter, getProductById, deleteProductById, updateProductDetals }

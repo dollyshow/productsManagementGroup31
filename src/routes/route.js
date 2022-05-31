@@ -1,22 +1,32 @@
 const express = require('express');
 const router = express.Router();
-const UserController = require("../controllers/UserController")
-const productController = require("../controllers/productController")
-
 // const  = require("../controllers/userController")
 
 //user url api
+const {register,userLogin,getProfile,updateUserDetails} = require("../controllers/UserController")
 
-router.post("/register", UserController.register)
-router.post('/Login', UserController.userLogin)
-router.get('/user/:userId/profile', UserController.getProfile)
-router.put('/user/:userId/profile', UserController.updateUserDetails)
+router.post("/register", register)
+router.post('/Login', userLogin)
+router.get('/user/:userId/profile', getProfile)
+router.put('/user/:userId/profile', updateUserDetails)
+
 
 //product url api
-router.post('/products', productController.Productregister)
-router.get('/products/:productId', productController.getProductById)
-router.put('/products/:productId', productController.updateProductDetals)
-router.delete('/products/:productId', productController.deleteProductById)
+const { Productregister,getByfilter, getProductById, deleteProductById, updateProductDetals } = require("../controllers/productController")
+
+router.post('/products',Productregister)
+router.get('/products', getByfilter)
+router.get('/products/:productId',getProductById)
+router.put('/products/:productId', updateProductDetals)
+router.delete('/products/:productId', deleteProductById)
+
+//cart url api
+const  {getCart,deleteCart,createCart,updateCart}=  require("../controllers/cartController")
+
+router.post('/users/:userId/cart', createCart)
+router.put('/users/:userId/cart', updateCart)
+router.get('/users/:userId/cart', getCart)
+router.delete('/users/:userId/cart', deleteCart)
 
 //if api is invalid OR wrong URL
 router.all("/**", function (req, res) {
