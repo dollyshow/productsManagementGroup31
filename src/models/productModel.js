@@ -18,3 +18,5 @@ const userSchema = new mongoose.Schema({
 },{timestamps:true})
 
 module.exports = mongoose.model('Product',userSchema)  //products
+
+//https://meet.google.com/erx-xmpr-txd
