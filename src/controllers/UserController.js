@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const axios = require("axios");
 const { uploadFile } = require('../utils/aws')
-const { isValid, isValidBody, validSize, isValidString, isValidMobileNum, isValidEmail, isValidPwd, isValidObjectId, isValidPrice, isValidNum } = require('../utils/validation')
+const { isValid, isValidBody, isValidString, isValidMobileNum, isValidEmail, isValidPwd, isValidObjectId} = require('../utils/validation')
 
 const createUser = async function (req, res) {
     try {
