@@ -13,7 +13,7 @@ const createUser = async function (req, res) {
 
         let { fname, lname, email, phone, password, address } = requestBody
         if (!isValid(fname)) return res.status(400).send({ status: false, message: "fname is mandatory" })
-        if (!isValidString(fname)) return res.status(201).send({ status: false, message: "fname should not contain number" })
+        if (!isValidString(fname)) return res.status(400).send({ status: false, message: "fname should not contain number" })
 
         if (!isValid(lname)) return res.status(400).send({ status: false, message: "lname is mandatory" })
         if (!isValidString(lname)) return res.status(400).send({ status: false, message: "lname should not contain number" })
@@ -46,14 +46,7 @@ const createUser = async function (req, res) {
             if (!street) return res.status(400).send({ status: false, message: "shipping street is mandatory" })
             if (!city) return res.status(400).send({ status: false, message: "shipping city is mandatory" })
             if (!pincode) return res.status(400).send({ status: false, message: "shipping pincode is mandatory" })
-            let options = {
-                method: "GET",
-                url: `https://api.postalpincode.in/pincode/${pincode}`
-            }
-            let result = await axios(options)
-            if (!result.data[0].PostOffice) return res.status(400).send({ status: false, message: "No city Found with provided pincode" })
-            const cityByPincode = result.data[0].PostOffice[0].District
-            if (city.toLowerCase() !== cityByPincode.toLowerCase()) return res.status(400).send({ status: false, message: "Provided Pincode city is different" })
+           
         }
 
         if (!billing) return res.status(400).send({ status: false, message: "billing address is mandatory" })
@@ -62,14 +55,6 @@ const createUser = async function (req, res) {
             if (!street) return res.status(400).send({ status: false, message: "billing street is mandatory" })
             if (!city) return res.status(400).send({ status: false, message: "billing city is mandatory" })
             if (!pincode) return res.status(400).send({ status: false, message: "billing pincode is mandatory" })
-            let options = {
-                method: "GET",
-                url: `https://api.postalpincode.in/pincode/${pincode}`
-            }
-            let result = await axios(options)
-            if (!result.data[0].PostOffice) return res.status(400).send({ status: false, message: "No city Found with provided pincode" })
-            const cityByPincode = result.data[0].PostOffice[0].District
-            if (city.toLowerCase() !== cityByPincode.toLowerCase()) return res.status(400).send({ status: false, message: "Provided Pincode city is different" })
         }
 
         if (files && files.length != 0) {
